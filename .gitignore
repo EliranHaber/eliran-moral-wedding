@@ -1,3 +1,6 @@
 # Original raw video (935MB) — never commit this, GitHub blocks files over 100MB anyway.
 # The site uses the compressed proposal-web.mp4 / proposal-mobile.mp4 instead.
 proposal.mp4
+
+# Local Claude Code tooling config — not part of the site
+.claude/
