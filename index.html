@@ -285,40 +285,6 @@
     max-width: 560px;
   }
 
-  /* ── OUR STORY ── */
-  #story .story-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    border: 1px solid rgba(184,150,106,0.2);
-    margin-top: 2.2rem;
-  }
-
-  .story-card {
-    padding: 1.8rem;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(184,150,106,0.1);
-  }
-
-  .story-card-date {
-    font-family: var(--sans);
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 0.7rem;
-  }
-
-  .story-card-text {
-    font-family: var(--serif);
-    font-size: 1.1rem;
-    font-style: italic;
-    color: var(--cream);
-    line-height: 1.6;
-  }
-
-  html[dir="rtl"] .story-card-text { font-style: normal; }
-
   /* ── EVENT DETAILS ── */
   #details .details-wrap {
     display: grid;
@@ -591,7 +557,6 @@
   /* ── RESPONSIVE ── */
   @media (max-width: 700px) {
     #details .details-wrap { grid-template-columns: 1fr; }
-    #story .story-grid { grid-template-columns: 1fr; }
     section { padding: 2.75rem 1.25rem; }
     #hero { padding: 2.5rem 1.25rem; }
   }
@@ -653,33 +618,6 @@
       <p class="hero-scroll text-crisp" data-i18n="hero.scroll">Scroll to explore</p>
     </div>
   </div>
-
-  <!-- OUR STORY -->
-  <section id="story">
-    <div class="reveal">
-      <p class="section-label" data-i18n="story.label">Chapter one</p>
-      <h2 class="section-title" data-i18n="story.title">Our <em>Story</em></h2>
-      <p class="section-body" data-i18n="story.body">Two people, one love story. We found each other, built a life together, and on a day neither of us will ever forget — the question was asked, and everything changed.</p>
-    </div>
-    <div class="story-grid reveal" style="transition-delay:0.1s">
-      <div class="story-card">
-        <p class="story-card-date" data-i18n="story.card1.date">The beginning</p>
-        <p class="story-card-text" data-i18n="story.card1.text">"The moment I met you, I knew. Some things you don't plan — you just feel."</p>
-      </div>
-      <div class="story-card">
-        <p class="story-card-date" data-i18n="story.card2.date">December 3, 2025</p>
-        <p class="story-card-text" data-i18n="story.card2.text">"He got down on one knee and my heart said yes before my voice could."</p>
-      </div>
-      <div class="story-card">
-        <p class="story-card-date" data-i18n="story.card3.date">Eliran, age 28</p>
-        <p class="story-card-text" data-i18n="story.card3.text">"She is my home. I simply stopped wandering."</p>
-      </div>
-      <div class="story-card">
-        <p class="story-card-date" data-i18n="story.card4.date">Moral, age 27</p>
-        <p class="story-card-text" data-i18n="story.card4.text">"I said yes. A thousand times yes. And I'd say it a thousand more."</p>
-      </div>
-    </div>
-  </section>
 
   <!-- THE DAY -->
   <section id="details">
@@ -804,14 +742,6 @@ const CONFIG = {
 const I18N = {
   en: {
     hero: { eyebrow: 'You are invited to celebrate', name1: 'Eliran', name2: 'Moral', location: 'Troya, Ashdod', scroll: 'Scroll to explore' },
-    story: {
-      label: 'Chapter one', title: 'Our <em>Story</em>',
-      body: 'Two people, one love story. We found each other, built a life together, and on a day neither of us will ever forget — the question was asked, and everything changed.',
-      card1: { date: 'The beginning', text: '"The moment I met you, I knew. Some things you don’t plan — you just feel."' },
-      card2: { date: 'December 3, 2025', text: '"He got down on one knee and my heart said yes before my voice could."' },
-      card3: { date: 'Eliran, age 28', text: '"She is my home. I simply stopped wandering."' },
-      card4: { date: 'Moral, age 27', text: '"I said yes. A thousand times yes. And I’d say it a thousand more."' }
-    },
     day: {
       label: 'Mark your calendar', title: 'The <em>Day</em>',
       count: { days: 'Days', hours: 'Hours', mins: 'Minutes', secs: 'Seconds' },
@@ -846,14 +776,6 @@ const I18N = {
   },
   he: {
     hero: { eyebrow: 'מוזמנים לחגוג איתנו', name1: 'אלירן', name2: 'מורל', location: 'טרויה, אשדוד', scroll: 'גללו למטה' },
-    story: {
-      label: 'פרק ראשון', title: '<em>הסיפור</em> שלנו',
-      body: 'שני אנשים, סיפור אהבה אחד. מצאנו אחד את השני, בנינו חיים ביחד, וביום שאף אחד מאיתנו לא ישכח — נשאלה השאלה, והכל השתנה.',
-      card1: { date: 'ההתחלה', text: '"מהרגע שפגשתי אותך, פשוט ידעתי. יש דברים שלא מתכננים — פשוט מרגישים אותם."' },
-      card2: { date: '3 בדצמבר, 2025', text: '"הוא ירד על ברך אחת, והלב שלי אמר כן עוד לפני שהפה הספיק לדבר."' },
-      card3: { date: 'אלירן, בן 28', text: '"היא הבית שלי. פשוט הפסקתי לנדוד."' },
-      card4: { date: 'מורל, בת 27', text: '"אמרתי כן. אלף פעמים כן. ואומר את זה עוד אלף פעמים."' }
-    },
     day: {
       label: 'שמרו את התאריך', title: 'היום <em>הגדול</em>',
       count: { days: 'ימים', hours: 'שעות', mins: 'דקות', secs: 'שניות' },
