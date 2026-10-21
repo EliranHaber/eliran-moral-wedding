@@ -472,11 +472,17 @@
   }
 
   .music-heart {
-    color: #c97070;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--mid);
     font-size: 0.9rem;
+    transition: color 0.2s, transform 0.2s;
     padding: 4px;
     white-space: nowrap;
   }
+
+  .music-heart:hover, .music-heart.liked { color: #c97070; transform: scale(1.2); }
 
   /* ── TO OUR GUESTS ── */
   #guests { text-align: center; }
@@ -500,16 +506,6 @@
   }
 
   html[dir="rtl"] .guests-tagline { font-style: normal; }
-
-  .guests-signature {
-    font-family: var(--serif);
-    font-size: 1.5rem;
-    font-style: italic;
-    color: var(--gold-light);
-    margin-top: 1.6rem;
-  }
-
-  html[dir="rtl"] .guests-signature { font-style: normal; }
 
   /* ── FOOTER ── */
   footer {
@@ -702,7 +698,6 @@
       <p class="section-body" data-i18n="guests.p1">We've been planning this day for months now, choosing every little detail so it would be perfect. But the truth is, what will really turn this evening into something magical is you — the people who stand beside us, who love us, and who come to celebrate with us from the heart.</p>
       <p class="section-body" data-i18n="guests.p2">On our wedding day, we want to experience that magic through your eyes. We invite you to be true partners in our memories: capture the hug at the reception, the madness on the dance floor, and the joyful moments — yours and ours — together.</p>
       <p class="section-body" data-i18n="guests.closing">With love, gratitude, and already so excited to celebrate with you,</p>
-      <p class="guests-signature" data-i18n="guests.signature">Moral &amp; Eliran</p>
     </div>
   </section>
 
@@ -758,8 +753,7 @@ const I18N = {
       salutation: 'Our beloved ones,',
       p1: 'We’ve been planning this day for months now, choosing every little detail so it would be perfect. But the truth is, what will really turn this evening into something magical is you — the people who stand beside us, who love us, and who come to celebrate with us from the heart.',
       p2: 'On our wedding day, we want to experience that magic through your eyes. We invite you to be true partners in our memories: capture the hug at the reception, the madness on the dance floor, and the joyful moments — yours and ours — together.',
-      closing: 'With love, gratitude, and already so excited to celebrate with you,',
-      signature: 'Moral &amp; Eliran'
+      closing: 'With love, gratitude, and already so excited to celebrate with you,'
     },
     footer: { names: 'Eliran &amp; Moral', status: 'See you on our big day' },
     langSwitchLabel: 'עברית',
@@ -791,8 +785,7 @@ const I18N = {
       salutation: 'אהובים שלנו,',
       p1: 'אנחנו מתכננים את היום הזה כבר חודשים, בוחרים כל פרט כדי שיהיה מושלם. אבל האמת היא, שמה שבאמת יהפוך את הערב הזה לקסם זה אתם. האנשים שמלווים אותנו, שאוהבים אותנו ושבאים לשמוח איתנו מהלב.',
       p2: 'ביום החתונה, אנחנו רוצים לחוות את הקסם הזה דרך העיניים שלכם. אנחנו מזמינים אתכם להיות שותפים אמיתיים לזיכרונות שלנו: לצלם את החיבוק בקבלת פנים, את הטירוף ברחבה, ואת הרגעים השמחים שלכם ושלנו ביחד.',
-      closing: 'אוהבים, מעריכים ומחכים כבר להתרגש איתכם,',
-      signature: 'מורל ואלירן'
+      closing: 'אוהבים, מעריכים ומחכים כבר להתרגש איתכם,'
     },
     footer: { names: 'אלירן ומורל', status: 'נתראה ביום הגדול שלנו' },
     langSwitchLabel: 'English',
@@ -936,9 +929,10 @@ async function sendToSheet(data) {
 
 // ── MUSIC WALL ──
 // Shared across all guests via the Google Sheet — starts empty, grows as real
-// submissions come in. Suggesting a song that's already there just bumps its
-// heart count server-side rather than adding a duplicate row.
+// submissions come in. Suggesting a song that's already there (or liking it)
+// just bumps its heart count server-side rather than adding a duplicate row.
 let lastSongs = [];
+const likedKeys = new Set(); // songs this visitor already liked this session
 
 async function fetchSongs() {
   if (!CONFIG.sheetsWebAppURL || CONFIG.sheetsWebAppURL.indexOf('PASTE_YOUR') !== -1) {
@@ -969,13 +963,29 @@ function renderSongs(songs) {
     const safeLink = s.link ? sanitizeUrl(s.link) : null;
     const titleHtml = safeLink ? `<a href="${safeLink}" target="_blank" rel="noopener">${titleText}</a>` : titleText;
     const artistHtml = s.artist ? escapeHtml(s.artist) + ' · ' : '';
+    const key = (s.song || s.link || '').toLowerCase();
+    const liked = likedKeys.has(key);
     item.innerHTML = `
       <span class="music-num">${i + 1}</span>
       <div class="music-song">${titleHtml}<br><span class="music-by">${artistHtml}${by}</span></div>
-      <span class="music-heart">♥ ${s.count || 1}</span>
+      <button class="music-heart${liked ? ' liked' : ''}" onclick="likeSong(${i})" title="Love this song">
+        ${liked ? '♥' : '♡'} ${s.count || 1}
+      </button>
     `;
     list.appendChild(item);
   });
+}
+
+async function likeSong(i) {
+  const s = lastSongs[i];
+  if (!s) return;
+  const key = (s.song || s.link || '').toLowerCase();
+  if (!key || likedKeys.has(key)) return;
+  likedKeys.add(key);
+  s.count = (s.count || 1) + 1;
+  renderSongs(lastSongs);
+  await sendToSheet({ type: 'song', song: s.song || '', artist: s.artist || '', link: s.link || '', name: '' });
+  fetchSongs();
 }
 
 async function addSong() {
