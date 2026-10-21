@@ -8,6 +8,9 @@
  * Suggesting a song that's already on the sheet (matched by song name, or by
  * link when no song name is given) bumps its Count instead of adding a
  * duplicate row — that Count is the heart number guests see on the site.
+ * A like click resubmits the same way with unlike=false; clicking again to
+ * undo a like sends unlike=true, which decrements Count instead (floored
+ * at 1, since a row only exists because someone suggested it at least once).
  */
 
 function doPost(e) {
@@ -24,6 +27,7 @@ function doPost(e) {
     var artist = (params.artist || '').trim();
     var link = (params.link || '').trim();
     var name = (params.name || '').trim();
+    var isUnlike = params.unlike === 'true';
     var key = (song || link).toLowerCase();
 
     var data = sheet.getDataRange().getValues();
@@ -37,11 +41,13 @@ function doPost(e) {
     }
 
     if (matchedRow > -1) {
-      var currentCount = sheet.getRange(matchedRow, 6).getValue();
-      sheet.getRange(matchedRow, 6).setValue((currentCount || 1) + 1);
-    } else {
+      var currentCount = sheet.getRange(matchedRow, 6).getValue() || 1;
+      var newCount = isUnlike ? Math.max(1, currentCount - 1) : currentCount + 1;
+      sheet.getRange(matchedRow, 6).setValue(newCount);
+    } else if (!isUnlike) {
       sheet.appendRow([new Date(), song, artist, link, name, 1]);
     }
+    // An unlike with no matching row is a no-op — nothing to undo.
   }
 
   return ContentService

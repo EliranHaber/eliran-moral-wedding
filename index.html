@@ -396,7 +396,7 @@
     margin: 1.6rem 0;
   }
 
-  #music-q, #music-link, #music-name {
+  #music-link {
     flex: 1;
     min-width: 180px;
     background: rgba(250,248,245,0.05);
@@ -409,8 +409,8 @@
     outline: none;
   }
 
-  #music-q:focus, #music-link:focus, #music-name:focus { border-color: rgba(184,150,106,0.5); }
-  #music-q::placeholder, #music-link::placeholder, #music-name::placeholder { color: var(--mid); }
+  #music-link:focus { border-color: rgba(184,150,106,0.5); }
+  #music-link::placeholder { color: var(--mid); }
 
   #music-submit {
     background: rgba(184,150,106,0.15);
@@ -679,9 +679,7 @@
     </div>
 
     <div class="music-input-wrap reveal" style="transition-delay:0.1s">
-      <input type="text" id="music-q" data-i18n-ph="music.input_ph" placeholder="Song name · Artist" onkeydown="if(event.key==='Enter')addSong()" />
-      <input type="url" id="music-link" data-i18n-ph="music.link_ph" placeholder="Or paste a Spotify/YouTube link" onkeydown="if(event.key==='Enter')addSong()" />
-      <input type="text" id="music-name" data-i18n-ph="music.name_ph" placeholder="Your name (optional)" onkeydown="if(event.key==='Enter')addSong()" />
+      <input type="url" id="music-link" data-i18n-ph="music.link_ph" placeholder="Paste a Spotify/YouTube link" onkeydown="if(event.key==='Enter')addSong()" />
       <button id="music-submit" onclick="addSong()" data-i18n="music.btn.add">Add Song</button>
     </div>
 
@@ -743,9 +741,9 @@ const I18N = {
     music: {
       label: 'Help us set the mood', title: 'Suggest a <em>Song</em>',
       body: 'Tell us what must play that night. Every suggestion goes straight to our DJ — don’t hold back.',
-      input_ph: 'Song name · Artist', link_ph: 'Or paste a Spotify/YouTube link', name_ph: 'Your name (optional)',
+      link_ph: 'Paste a Spotify/YouTube link',
       btn: { add: 'Add Song' }, by_guest: 'Suggested by a guest', linkFallback: 'Shared a track',
-      alert: { badLink: 'Please paste a valid link (starting with http).', empty: 'Please add a song name or a link.' }
+      alert: { badLink: 'Please paste a valid link (starting with http).', empty: 'Please paste a link.' }
     },
     guests: {
       label: 'A note from us', title: 'To Our <em>Guests</em>',
@@ -766,7 +764,7 @@ const I18N = {
       count: { days: 'ימים', hours: 'שעות', mins: 'דקות', secs: 'שניות' },
       detail: {
         date: { label: 'תאריך' },
-        location: { label: 'מיקום', value: 'אשדוד, ישראל', sub: 'טרויה גארדן' },
+        location: { label: 'מיקום', value: 'אשדוד, ישראל', sub: 'אולמי טרויה' },
         time: { label: 'שעה', reception: 'קבלת פנים', chuppah: 'חופה' }
       },
       todayIsTheDay: 'היום הוא היום! 🎉'
@@ -775,9 +773,9 @@ const I18N = {
     music: {
       label: 'עזרו לנו לקבוע את האווירה', title: 'תציעו <em>שיר</em>',
       body: 'ספרו לנו מה חייב להתנגן בערב הזה.',
-      input_ph: 'שם השיר · אמן', link_ph: 'או הדביקו קישור מספוטיפיי/יוטיוב', name_ph: 'השם שלך (לא חובה)',
+      link_ph: 'הדביקו קישור מספוטיפיי/יוטיוב',
       btn: { add: 'הוסיפו שיר' }, by_guest: 'הוצע על ידי אורח', linkFallback: 'שותף קישור לשיר',
-      alert: { badLink: 'נא להדביק קישור תקין (שמתחיל ב-http).', empty: 'נא להוסיף שם שיר או קישור.' }
+      alert: { badLink: 'נא להדביק קישור תקין (שמתחיל ב-http).', empty: 'נא להדביק קישור.' }
     },
     guests: {
       label: 'מילה מאיתנו', title: 'לאורחים והמוזמנים <em>שלנו</em>',
@@ -990,48 +988,100 @@ function renderSongs(songs) {
   });
 }
 
+// Toggle a like: clicking an unliked heart increments its shared count,
+// clicking an already-liked heart (filled, from this browser) undoes it.
 async function likeSong(i) {
   const s = lastSongs[i];
   if (!s) return;
   const key = (s.song || s.link || '').toLowerCase();
-  if (!key || likedKeys.has(key)) return;
-  likedKeys.add(key);
+  if (!key) return;
+  const alreadyLiked = likedKeys.has(key);
+
+  if (alreadyLiked) {
+    likedKeys.delete(key);
+    s.count = Math.max(1, (s.count || 1) - 1);
+  } else {
+    likedKeys.add(key);
+    s.count = (s.count || 1) + 1;
+  }
   saveLikedKeys();
-  s.count = (s.count || 1) + 1;
   renderSongs(lastSongs);
-  await sendToSheet({ type: 'song', song: s.song || '', artist: s.artist || '', link: s.link || '', name: '' });
+
+  await sendToSheet({
+    type: 'song', song: s.song || '', artist: s.artist || '', link: s.link || '', name: '',
+    unlike: alreadyLiked ? 'true' : 'false'
+  });
   fetchSongs();
+}
+
+// ── AUTO-DETECT SONG/ARTIST FROM A LINK ──
+// Best-effort only: if a provider isn't recognized, or the lookup fails for any
+// reason, we still submit the bare link (same fallback used when nothing
+// could be detected at all).
+function stripTitleDecorations(title) {
+  const pattern = /[([][^()[\]]*(?:\b(?:official|video|audio|lyrics?|visualizer|remaster(?:ed)?|hd|4k|mv|clip)\b|רשמי|קליפ|מילים|אודיו)[^()[\]]*[)\]]\s*$/i;
+  let t = title;
+  let prev;
+  do {
+    prev = t;
+    t = t.replace(pattern, '').trim();
+  } while (t !== prev);
+  return t;
+}
+
+function parseTitleIntoSongArtist(rawTitle, fallbackArtist) {
+  const title = stripTitleDecorations((rawTitle || '').trim());
+  const sepMatch = title.match(/^(.+?)\s[-–—]\s(.+)$/);
+  if (sepMatch) {
+    return { artist: sepMatch[1].trim(), song: sepMatch[2].trim() };
+  }
+  return { artist: (fallbackArtist || '').trim(), song: title };
+}
+
+async function detectSongInfo(url) {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '');
+
+    if (host === 'youtube.com' || host === 'youtu.be' || host === 'music.youtube.com') {
+      const res = await fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent(url));
+      if (!res.ok) return null;
+      const data = await res.json();
+      return parseTitleIntoSongArtist(data.title, data.author_name);
+    }
+
+    if (host === 'open.spotify.com') {
+      const res = await fetch('https://open.spotify.com/oembed?url=' + encodeURIComponent(url));
+      if (!res.ok) return null;
+      const data = await res.json();
+      // Spotify's oEmbed only exposes the track title, never the artist
+      return { song: (data.title || '').trim(), artist: '' };
+    }
+  } catch (err) {
+    console.warn('Could not auto-detect song info from link', err);
+  }
+  return null;
 }
 
 async function addSong() {
   const dict = I18N[currentLang];
-  const qInput = document.getElementById('music-q');
   const linkInput = document.getElementById('music-link');
-  const nameInput = document.getElementById('music-name');
-
-  const qVal = qInput.value.trim();
   const linkRaw = linkInput.value.trim();
-  const submittedBy = nameInput.value.trim();
 
-  let link = null;
-  if (linkRaw) {
-    link = sanitizeUrl(linkRaw);
-    if (!link) { alert(dict.music.alert.badLink); return; }
-  }
-  if (!qVal && !link) { alert(dict.music.alert.empty); return; }
-
-  const parts = qVal.split('·').map(s => s.trim());
-  const song = parts[0] || '';
-  const artist = parts[1] || '';
+  if (!linkRaw) { alert(dict.music.alert.empty); return; }
+  const link = sanitizeUrl(linkRaw);
+  if (!link) { alert(dict.music.alert.badLink); return; }
 
   const btn = document.getElementById('music-submit');
   btn.disabled = true;
-  await sendToSheet({ type: 'song', song, artist, link: link || '', name: submittedBy });
+
+  const info = await detectSongInfo(link);
+  const song = info ? info.song : '';
+  const artist = info ? info.artist : '';
+
+  await sendToSheet({ type: 'song', song, artist, link, name: '' });
   btn.disabled = false;
 
-  qInput.value = '';
   linkInput.value = '';
-  nameInput.value = '';
   fetchSongs();
 }
 
