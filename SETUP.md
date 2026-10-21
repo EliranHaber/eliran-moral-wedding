@@ -6,18 +6,21 @@ Open [index.html](index.html) and edit the `CONFIG` object near the top of the `
 
 ```js
 const CONFIG = {
-  weddingDateISO: '2026-11-22T19:00:00', // your real date & start time — confirm the 19:00 start time is correct
-  diginetURL: '#', // paste your Diginet RSVP link here once invites go out
+  weddingDateISO: '2026-11-22T19:30:00', // wedding date + reception (קבלת פנים) start time
+  receptionTime: '19:30',
+  chuppahTime: '20:30',
   mapsQuery: 'מתחם בני דרום, אשדוד, ישראל',
   sheetsWebAppURL: 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'
 };
 ```
 
-Everything else (hero, story quotes, section labels, etc.) is translated in the `I18N` object right below it — edit the English (`en`) and Hebrew (`he`) text there if you want to change any wording.
+Everything else (hero, section labels, etc.) is translated in the `I18N` object right below it — edit the English (`en`) and Hebrew (`he`) text there if you want to change any wording.
+
+RSVPs are handled outside the site entirely (Diginet), so the only backend this site needs is for the song-request wall.
 
 ## 2. Connect song requests to a Google Sheet (free, no server)
 
-RSVPs are handled entirely by Diginet now, so the only thing this site needs a backend for is the song-request wall. Right now, song suggestions only save to each guest's own browser (`localStorage`) — they never reach you. To collect them centrally:
+The song wall is shared — every guest sees the same growing list, and suggesting a song that's already there just bumps its heart count instead of adding a duplicate. To wire this up:
 
 1. Create a new Google Sheet (sheets.google.com → Blank).
 2. In the sheet, go to **Extensions → Apps Script**.
@@ -31,9 +34,9 @@ RSVPs are handled entirely by Diginet now, so the only thing this site needs a b
 8. Copy the **Web app URL** it gives you (ends in `/exec`).
 9. Paste that URL into `CONFIG.sheetsWebAppURL` in [index.html](index.html).
 
-Once that's done, every song suggestion (name, artist, pasted link, and who suggested it) will land as a new row in the **Songs** tab of your sheet. You (and your DJ) can just open the live sheet to see them.
+Once that's done, every song suggestion (name, artist, pasted link, who suggested it, and a running count) lives in the **Songs** tab of your sheet, and the site reads it back live for every visitor. You (and your DJ) can just open the sheet to see them.
 
-If you ever redeploy the script after editing it, choose **Manage deployments → Edit → New version** so the same URL keeps working.
+**If you already had this deployed before and the script's code changed** (e.g. to add the shared/dedupe behavior), you must push the new version out: open the Apps Script project, paste in the updated `google-apps-script.gs` code, then **Deploy → Manage deployments → ✏️ Edit → New version → Deploy**. This keeps the same `/exec` URL working — a brand new deployment would give you a different URL and break the site.
 
 ## 3. Compressing note
 

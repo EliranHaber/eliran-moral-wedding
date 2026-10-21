@@ -339,6 +339,11 @@
     font-weight: 200;
   }
 
+  .detail-value.two-line {
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+
   /* ── COUNTDOWN ── */
   /* Always left-to-right, even on the Hebrew/RTL layout, so the digits read Days:Hours:Mins:Secs in order */
   .countdown {
@@ -382,28 +387,6 @@
     align-self: flex-start;
     padding-top: 0.1rem;
   }
-
-  /* ── RSVP (single CTA to the Diginet invitation app) ── */
-  #rsvp { text-align: center; }
-
-  .btn-cta {
-    display: inline-block;
-    margin-top: 1.5rem;
-    padding: 1.05rem 2.6rem;
-    background: transparent;
-    border: 1px solid var(--gold);
-    color: var(--gold);
-    font-family: var(--sans);
-    font-weight: 300;
-    font-size: 0.75rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-
-  .btn-cta:hover { background: var(--gold); color: var(--dark); }
 
   /* ── MUSIC WALL ── */
   #music .music-input-wrap {
@@ -489,26 +472,10 @@
   }
 
   .music-heart {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--mid);
+    color: #c97070;
     font-size: 0.9rem;
-    transition: color 0.2s, transform 0.2s;
     padding: 4px;
-  }
-
-  .music-heart:hover, .music-heart.liked { color: #c97070; transform: scale(1.2); }
-
-  /* ── GALLERY PLACEHOLDER ── */
-  #gallery .gallery-note {
-    margin-top: 1.6rem;
-    padding: 2.2rem 1.5rem;
-    border: 1px dashed rgba(184,150,106,0.2);
-    text-align: center;
-    color: var(--mid);
-    font-size: 0.85rem;
-    line-height: 1.7;
+    white-space: nowrap;
   }
 
   /* ── FOOTER ── */
@@ -669,18 +636,8 @@
           <svg viewBox="0 0 24 24" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
         </div>
         <p class="detail-label" data-i18n="day.detail.time.label">Time</p>
-        <p class="detail-value" id="detail-time-value">—</p>
+        <p class="detail-value two-line" id="detail-time-value">—</p>
       </div>
-    </div>
-  </section>
-
-  <!-- RSVP via Diginet -->
-  <section id="rsvp">
-    <div class="reveal">
-      <p class="section-label" data-i18n="rsvp.label">Kindly RSVP</p>
-      <h2 class="section-title" data-i18n="rsvp.title">Will you <em>join us?</em></h2>
-      <p class="section-body" style="margin: 0 auto; text-align:center" data-i18n="rsvp.body">We're using Diginet for invitations and RSVPs. Once you've received yours, tap below to confirm your seat.</p>
-      <a class="btn-cta" id="rsvp-diginet-btn" target="_blank" rel="noopener" data-i18n="rsvp.btn.diginet">Confirm via Diginet</a>
     </div>
   </section>
 
@@ -702,19 +659,6 @@
     <div class="music-list reveal" style="transition-delay:0.2s" id="music-list"></div>
   </section>
 
-  <!-- GALLERY -->
-  <section id="gallery">
-    <div class="reveal">
-      <p class="section-label" data-i18n="gallery.label">Memories</p>
-      <h2 class="section-title" data-i18n="gallery.title">Our <em>Gallery</em></h2>
-      <p class="section-body" data-i18n="gallery.body">A collection of our favourite moments together — more to come as the big day approaches.</p>
-    </div>
-    <div class="gallery-note reveal" style="transition-delay:0.1s">
-      📷 &nbsp;<span data-i18n="gallery.note1">Photos coming soon.</span><br>
-      <span style="font-size:0.75rem; color:var(--mid)" data-i18n="gallery.note2">We'll fill this with our favourite moments before the wedding.</span>
-    </div>
-  </section>
-
   <!-- FOOTER -->
   <footer>
     <p class="footer-names" data-i18n="footer.names">Eliran &amp; Moral</p>
@@ -728,10 +672,11 @@
    EDIT THESE VALUES — everything site-specific lives here
    ============================================================ */
 const CONFIG = {
-  // Wedding date & start time (24h, local Israel time)
-  weddingDateISO: '2026-11-22T19:00:00', // TODO: confirm exact start time — currently defaulted to 19:00
-  // Diginet invitation/RSVP link — paste it once your invites go out
-  diginetURL: '#', // TODO: paste your Diginet RSVP link here
+  // Wedding date (countdown targets the reception/קבלת פנים start time below)
+  weddingDateISO: '2026-11-22T19:30:00',
+  // Displayed times for the two parts of the evening
+  receptionTime: '19:30',
+  chuppahTime: '20:30',
   // Address used to build the Waze / Google Maps buttons
   mapsQuery: 'מתחם בני דרום, אשדוד, ישראל',
   // Paste the /exec URL from your deployed Google Apps Script web app (see SETUP.md)
@@ -748,27 +693,17 @@ const I18N = {
       detail: {
         date: { label: 'Date' },
         location: { label: 'Location', value: 'Ashdod, Israel', sub: 'Troya Garden' },
-        time: { label: 'Time' }
+        time: { label: 'Time', reception: 'Reception', chuppah: 'Chuppah' }
       },
       todayIsTheDay: 'Today is the day! 🎉'
     },
     directions: { waze: 'Waze', maps: 'Google Maps' },
-    rsvp: {
-      label: 'Kindly RSVP', title: 'Will you <em>join us?</em>',
-      body: "We're using Diginet for invitations and RSVPs. Once you've received yours, tap below to confirm your seat.",
-      btn: { diginet: 'Confirm via Diginet' }
-    },
     music: {
       label: 'Help us set the mood', title: 'Suggest a <em>Song</em>',
       body: 'Tell us what must play that night. Every suggestion goes straight to our DJ — don’t hold back.',
       input_ph: 'Song name · Artist', link_ph: 'Or paste a Spotify/YouTube link', name_ph: 'Your name (optional)',
       btn: { add: 'Add Song' }, by_guest: 'Suggested by a guest', linkFallback: 'Shared a track',
       alert: { badLink: 'Please paste a valid link (starting with http).', empty: 'Please add a song name or a link.' }
-    },
-    gallery: {
-      label: 'Memories', title: 'Our <em>Gallery</em>',
-      body: 'A collection of our favourite moments together — more to come as the big day approaches.',
-      note1: 'Photos coming soon.', note2: 'We’ll fill this with our favourite moments before the wedding.'
     },
     footer: { names: 'Eliran &amp; Moral', status: 'See you on our big day' },
     langSwitchLabel: 'עברית',
@@ -782,27 +717,17 @@ const I18N = {
       detail: {
         date: { label: 'תאריך' },
         location: { label: 'מיקום', value: 'אשדוד, ישראל', sub: 'טרויה גארדן' },
-        time: { label: 'שעה' }
+        time: { label: 'שעה', reception: 'קבלת פנים', chuppah: 'חופה' }
       },
       todayIsTheDay: 'היום הוא היום! 🎉'
     },
     directions: { waze: 'וויז', maps: 'גוגל מפות' },
-    rsvp: {
-      label: 'אישור הגעה', title: 'תגיעו <em>לחגוג איתנו?</em>',
-      body: 'אנחנו משתמשים בדיג\'ינט להזמנות ואישורי הגעה. לאחר קבלת ההזמנה שלכם, לחצו למטה לאישור הגעה.',
-      btn: { diginet: 'אישור הגעה בדיג\'ינט' }
-    },
     music: {
-      label: 'עזרו לנו לקבוע את האווירה', title: 'הציעו <em>שיר</em>',
+      label: 'עזרו לנו לקבוע את האווירה', title: 'תציעו <em>שיר</em>',
       body: 'ספרו לנו מה חייב להתנגן בערב הזה. כל הצעה מגיעה ישיר ל-DJ שלנו — אל תתביישו.',
       input_ph: 'שם השיר · אמן', link_ph: 'או הדביקו קישור מספוטיפיי/יוטיוב', name_ph: 'השם שלך (לא חובה)',
       btn: { add: 'הוסיפו שיר' }, by_guest: 'הוצע על ידי אורח', linkFallback: 'שותף קישור לשיר',
       alert: { badLink: 'נא להדביק קישור תקין (שמתחיל ב-http).', empty: 'נא להוסיף שם שיר או קישור.' }
-    },
-    gallery: {
-      label: 'זיכרונות', title: 'הגלריה <em>שלנו</em>',
-      body: 'אוסף של הרגעים האהובים עלינו — עוד יגיע עם התקרבות החתונה.',
-      note1: 'תמונות בקרוב.', note2: 'נמלא כאן את הרגעים האהובים עלינו לפני החתונה.'
     },
     footer: { names: 'אלירן ומורל', status: 'נתראה ביום הגדול שלנו' },
     langSwitchLabel: 'English',
@@ -845,10 +770,9 @@ function applyTranslations() {
 
   document.getElementById('waze-btn').title = dict.directions.waze;
   document.getElementById('maps-btn').title = dict.directions.maps;
-  document.getElementById('rsvp-diginet-btn').href = CONFIG.diginetURL;
 
   updateDateDisplays();
-  renderSongs();
+  renderSongs(lastSongs);
 
   // Waze / Google Maps links
   const q = encodeURIComponent(CONFIG.mapsQuery);
@@ -867,16 +791,13 @@ function formatDate(iso) {
   const d = new Date(iso);
   return new Intl.DateTimeFormat(I18N[currentLang].locale, { year: 'numeric', month: 'long', day: 'numeric' }).format(d);
 }
-function formatTime(iso) {
-  const d = new Date(iso);
-  return new Intl.DateTimeFormat(I18N[currentLang].locale, { hour: 'numeric', minute: '2-digit' }).format(d);
-}
-
 function updateDateDisplays() {
   const dict = I18N[currentLang];
   document.getElementById('hero-date').textContent = formatDate(CONFIG.weddingDateISO) + '  ·  ' + dict.hero.location;
   document.getElementById('detail-date-value').textContent = formatDate(CONFIG.weddingDateISO);
-  document.getElementById('detail-time-value').textContent = formatTime(CONFIG.weddingDateISO);
+  document.getElementById('detail-time-value').innerHTML =
+    dict.day.detail.time.reception + ' · ' + CONFIG.receptionTime + '<br>' +
+    dict.day.detail.time.chuppah + ' · ' + CONFIG.chuppahTime;
 }
 
 // ── SOUND (piano — web/desktop view only) ──
@@ -949,37 +870,50 @@ async function sendToSheet(data) {
 }
 
 // ── MUSIC WALL ──
-const defaultSongs = [
-  { song: 'Can’t Help Falling in Love', artist: 'Elvis Presley', likes: 12 },
-  { song: 'Perfect', artist: 'Ed Sheeran', likes: 9 },
-  { song: 'Rak Bishvilo', artist: 'Subliminal & Maimon', likes: 7 }
-];
+// Shared across all guests via the Google Sheet — starts empty, grows as real
+// submissions come in. Suggesting a song that's already there just bumps its
+// heart count server-side rather than adding a duplicate row.
+let lastSongs = [];
 
-let songs = JSON.parse(localStorage.getItem('music-suggestions') || 'null') || defaultSongs;
+async function fetchSongs() {
+  if (!CONFIG.sheetsWebAppURL || CONFIG.sheetsWebAppURL.indexOf('PASTE_YOUR') !== -1) {
+    lastSongs = [];
+    renderSongs(lastSongs);
+    return;
+  }
+  try {
+    const res = await fetch(CONFIG.sheetsWebAppURL);
+    const data = await res.json();
+    lastSongs = Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error('Failed to load song suggestions', err);
+    lastSongs = [];
+  }
+  renderSongs(lastSongs);
+}
 
-function renderSongs() {
+function renderSongs(songs) {
   const list = document.getElementById('music-list');
   const dict = I18N[currentLang];
   list.innerHTML = '';
   songs.forEach((s, i) => {
     const item = document.createElement('div');
     item.className = 'music-item';
-    const by = s.by ? escapeHtml(s.by) : dict.music.by_guest;
+    const by = s.name ? escapeHtml(s.name) : dict.music.by_guest;
     const titleText = s.song ? escapeHtml(s.song) : dict.music.linkFallback;
-    const titleHtml = s.link ? `<a href="${s.link}" target="_blank" rel="noopener">${titleText}</a>` : titleText;
+    const safeLink = s.link ? sanitizeUrl(s.link) : null;
+    const titleHtml = safeLink ? `<a href="${safeLink}" target="_blank" rel="noopener">${titleText}</a>` : titleText;
     const artistHtml = s.artist ? escapeHtml(s.artist) + ' · ' : '';
     item.innerHTML = `
       <span class="music-num">${i + 1}</span>
       <div class="music-song">${titleHtml}<br><span class="music-by">${artistHtml}${by}</span></div>
-      <button class="music-heart${s.liked ? ' liked' : ''}" onclick="likeSong(${i})" title="Love this song">
-        ${s.liked ? '♥' : '♡'} ${s.likes}
-      </button>
+      <span class="music-heart">♥ ${s.count || 1}</span>
     `;
     list.appendChild(item);
   });
 }
 
-function addSong() {
+async function addSong() {
   const dict = I18N[currentLang];
   const qInput = document.getElementById('music-q');
   const linkInput = document.getElementById('music-link');
@@ -997,28 +931,26 @@ function addSong() {
   if (!qVal && !link) { alert(dict.music.alert.empty); return; }
 
   const parts = qVal.split('·').map(s => s.trim());
-  const entry = { song: parts[0] || '', artist: parts[1] || '', by: submittedBy || null, link, likes: 0 };
-  songs.unshift(entry);
-  localStorage.setItem('music-suggestions', JSON.stringify(songs));
-  sendToSheet({ type: 'song', song: entry.song, artist: entry.artist, link: link || '', name: submittedBy });
+  const song = parts[0] || '';
+  const artist = parts[1] || '';
+
+  const btn = document.getElementById('music-submit');
+  btn.disabled = true;
+  await sendToSheet({ type: 'song', song, artist, link: link || '', name: submittedBy });
+  btn.disabled = false;
 
   qInput.value = '';
   linkInput.value = '';
   nameInput.value = '';
-  renderSongs();
+  fetchSongs();
 }
 
-function likeSong(i) {
-  if (songs[i].liked) return;
-  songs[i].likes++;
-  songs[i].liked = true;
-  songs.sort((a, b) => b.likes - a.likes);
-  localStorage.setItem('music-suggestions', JSON.stringify(songs));
-  renderSongs();
-}
+// Light polling so the wall feels live during the party without anyone refreshing
+setInterval(fetchSongs, 20000);
 
 // ── INIT ──
 applyTranslations();
+fetchSongs();
 </script>
 </body>
 </html>
