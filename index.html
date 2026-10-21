@@ -932,7 +932,21 @@ async function sendToSheet(data) {
 // submissions come in. Suggesting a song that's already there (or liking it)
 // just bumps its heart count server-side rather than adding a duplicate row.
 let lastSongs = [];
-const likedKeys = new Set(); // songs this visitor already liked this session
+
+// Persisted in localStorage so a refresh can't be used to re-like (and re-count) the same song
+function loadLikedKeys() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem('liked-songs') || '[]'));
+  } catch (e) {
+    return new Set();
+  }
+}
+const likedKeys = loadLikedKeys();
+function saveLikedKeys() {
+  try {
+    localStorage.setItem('liked-songs', JSON.stringify([...likedKeys]));
+  } catch (e) { /* ignore (e.g. private browsing storage limits) */ }
+}
 
 async function fetchSongs() {
   if (!CONFIG.sheetsWebAppURL || CONFIG.sheetsWebAppURL.indexOf('PASTE_YOUR') !== -1) {
@@ -982,6 +996,7 @@ async function likeSong(i) {
   const key = (s.song || s.link || '').toLowerCase();
   if (!key || likedKeys.has(key)) return;
   likedKeys.add(key);
+  saveLikedKeys();
   s.count = (s.count || 1) + 1;
   renderSongs(lastSongs);
   await sendToSheet({ type: 'song', song: s.song || '', artist: s.artist || '', link: s.link || '', name: '' });
