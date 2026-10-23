@@ -743,7 +743,7 @@ const I18N = {
       body: 'Tell us what must play that night. Every suggestion goes straight to our DJ — don’t hold back.',
       link_ph: 'Paste a Spotify/YouTube link',
       btn: { add: 'Add Song' }, by_guest: 'Suggested by a guest', linkFallback: 'Shared a track',
-      alert: { badLink: 'Please paste a valid link (starting with http).', empty: 'Please paste a link.' }
+      alert: { badLink: 'Please paste a valid YouTube or Spotify link.', empty: 'Please paste a link.' }
     },
     guests: {
       label: 'A note from us', title: 'To Our <em>Guests</em>',
@@ -775,7 +775,7 @@ const I18N = {
       body: 'ספרו לנו מה חייב להתנגן בערב הזה.',
       link_ph: 'הדביקו קישור מספוטיפיי/יוטיוב',
       btn: { add: 'הוסיפו שיר' }, by_guest: 'הוצע על ידי אורח', linkFallback: 'שותף קישור לשיר',
-      alert: { badLink: 'נא להדביק קישור תקין (שמתחיל ב-http).', empty: 'נא להדביק קישור.' }
+      alert: { badLink: 'נא להדביק קישור תקין מיוטיוב או ספוטיפיי.', empty: 'נא להדביק קישור.' }
     },
     guests: {
       label: 'מילה מאיתנו', title: 'לאורחים והמוזמנים <em>שלנו</em>',
@@ -854,6 +854,18 @@ function updateDateDisplays() {
   document.getElementById('detail-time-value').innerHTML =
     dict.day.detail.time.reception + ' · ' + CONFIG.receptionTime + '<br>' +
     dict.day.detail.time.chuppah + ' · ' + CONFIG.chuppahTime;
+}
+
+// ── BACKGROUND VIDEO ──
+// Belt-and-braces loop: the `loop` attribute should handle this on its own,
+// but some mobile browsers silently drop it (e.g. after the tab loses focus
+// or under battery-saver mode), so force a restart if "ended" ever fires.
+const bgVideo = document.getElementById('bg-video');
+if (bgVideo) {
+  bgVideo.addEventListener('ended', () => {
+    bgVideo.currentTime = 0;
+    bgVideo.play().catch(() => {});
+  });
 }
 
 // ── SOUND (piano — web/desktop view only) ──
@@ -1038,10 +1050,22 @@ function parseTitleIntoSongArtist(rawTitle, fallbackArtist) {
   return { artist: (fallbackArtist || '').trim(), song: title };
 }
 
-async function detectSongInfo(url) {
+// Only these hosts are accepted for song suggestions, and the only ones
+// detectSongInfo knows how to look up — kept as one list so both stay in sync.
+const SUPPORTED_MUSIC_HOSTS = ['youtube.com', 'youtu.be', 'music.youtube.com', 'open.spotify.com'];
+
+function getSupportedMusicHost(url) {
   try {
     const host = new URL(url).hostname.replace(/^www\./, '');
+    return SUPPORTED_MUSIC_HOSTS.includes(host) ? host : null;
+  } catch (e) {
+    return null;
+  }
+}
 
+async function detectSongInfo(url) {
+  const host = getSupportedMusicHost(url);
+  try {
     if (host === 'youtube.com' || host === 'youtu.be' || host === 'music.youtube.com') {
       const res = await fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent(url));
       if (!res.ok) return null;
@@ -1069,7 +1093,7 @@ async function addSong() {
 
   if (!linkRaw) { alert(dict.music.alert.empty); return; }
   const link = sanitizeUrl(linkRaw);
-  if (!link) { alert(dict.music.alert.badLink); return; }
+  if (!link || !getSupportedMusicHost(link)) { alert(dict.music.alert.badLink); return; }
 
   const btn = document.getElementById('music-submit');
   btn.disabled = true;
