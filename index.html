@@ -221,6 +221,7 @@
     position: fixed;
     top: 1rem;
     right: 1rem;
+    z-index: 100;
     width: 44px;
     background: rgba(26,23,20,0.78);
     border: 1px solid rgba(184,150,106,0.4);
@@ -507,6 +508,28 @@
 
   html[dir="rtl"] .guests-tagline { font-style: normal; }
 
+  /* ── PHOTO & VIDEO SHARING ── */
+  #photos { text-align: center; }
+
+  .btn-cta {
+    display: inline-block;
+    margin-top: 1.5rem;
+    padding: 1.05rem 2.6rem;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: var(--sans);
+    font-weight: 300;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .btn-cta:hover { background: var(--gold); color: var(--dark); }
+
   /* ── FOOTER ── */
   footer {
     border-top: 1px solid rgba(184,150,106,0.15);
@@ -699,6 +722,16 @@
     </div>
   </section>
 
+  <!-- PHOTO & VIDEO SHARING -->
+  <section id="photos">
+    <div class="reveal">
+      <p class="section-label" data-i18n="photos.label">Capture the night</p>
+      <h2 class="section-title" data-i18n="photos.title">Share Your <em>Photos</em></h2>
+      <p class="section-body" style="margin: 0 auto; text-align:center" data-i18n="photos.body">Snapped something beautiful? Add your photos and videos from the night to our shared album — we'd love to see the day through your eyes.</p>
+      <a class="btn-cta" id="photos-upload-btn" target="_blank" rel="noopener" data-i18n="photos.btn">Upload Photos &amp; Videos</a>
+    </div>
+  </section>
+
   <!-- FOOTER -->
   <footer>
     <p class="footer-names" data-i18n="footer.names">Eliran &amp; Moral</p>
@@ -720,7 +753,9 @@ const CONFIG = {
   // Address used to build the Waze / Google Maps buttons
   mapsQuery: 'מתחם בני דרום, אשדוד, ישראל',
   // Paste the /exec URL from your deployed Google Apps Script web app (see SETUP.md)
-  sheetsWebAppURL: 'https://script.google.com/macros/s/AKfycbx_aD3ERj8rWIkRp4xLsxHzz7zLU90BjiTU5wBIOeUVZFx8mwCL70zcU-DL--mGfpK1sQ/exec'
+  sheetsWebAppURL: 'https://script.google.com/macros/s/AKfycbx_aD3ERj8rWIkRp4xLsxHzz7zLU90BjiTU5wBIOeUVZFx8mwCL70zcU-DL--mGfpK1sQ/exec',
+  // Link to your shared Google Photos album — paste it once you've created one (see SETUP.md)
+  photosUploadURL: '#'
 };
 
 // ── TRANSLATIONS ──
@@ -753,6 +788,11 @@ const I18N = {
       p2: 'On our wedding day, we want to experience that magic through your eyes. We invite you to be true partners in our memories: capture the hug at the reception, the madness on the dance floor, and the joyful moments — yours and ours — together.',
       closing: 'With love, gratitude, and already so excited to celebrate with you,'
     },
+    photos: {
+      label: 'Capture the night', title: 'Share Your <em>Photos</em>',
+      body: 'Snapped something beautiful? Add your photos and videos from the night to our shared album — we’d love to see the day through your eyes.',
+      btn: 'Upload Photos &amp; Videos'
+    },
     footer: { names: 'Eliran &amp; Moral', status: 'See you on our big day' },
     langSwitchLabel: 'עברית',
     locale: 'en-US'
@@ -760,7 +800,7 @@ const I18N = {
   he: {
     hero: { eyebrow: 'מוזמנים לחגוג איתנו', name1: 'אלירן', name2: 'מורל', location: 'טרויה, אשדוד', scroll: 'גללו למטה' },
     day: {
-      label: 'שמרו את התאריך', title: 'היום <em>הגדול</em>',
+      label: 'Save the date', title: 'היום <em>הגדול</em>',
       count: { days: 'ימים', hours: 'שעות', mins: 'דקות', secs: 'שניות' },
       detail: {
         date: { label: 'תאריך' },
@@ -784,6 +824,11 @@ const I18N = {
       p1: 'אנחנו מתכננים את היום הזה כבר חודשים, בוחרים כל פרט כדי שיהיה מושלם. אבל האמת היא, שמה שבאמת יהפוך את הערב הזה לקסם זה אתם. האנשים שמלווים אותנו, שאוהבים אותנו ושבאים לשמוח איתנו מהלב.',
       p2: 'ביום החתונה, אנחנו רוצים לחוות את הקסם הזה דרך העיניים שלכם. אנחנו מזמינים אתכם להיות שותפים אמיתיים לזיכרונות שלנו: לצלם את החיבוק בקבלת פנים, את הטירוף ברחבה, ואת הרגעים השמחים שלכם ושלנו ביחד.',
       closing: 'אוהבים, מעריכים ומחכים כבר להתרגש איתכם,'
+    },
+    photos: {
+      label: 'תפסו את הערב', title: 'שתפו <em>תמונות</em>',
+      body: 'צילמתם רגע יפה? שתפו אותנו בתמונות ובסרטונים מהערב באלבום המשותף שלנו — נשמח לראות את היום דרך העיניים שלכם.',
+      btn: 'העלאת תמונות וסרטונים'
     },
     footer: { names: 'אלירן ומורל', status: 'נתראה ביום הגדול שלנו' },
     langSwitchLabel: 'English',
@@ -826,6 +871,7 @@ function applyTranslations() {
 
   document.getElementById('waze-btn').title = dict.directions.waze;
   document.getElementById('maps-btn').title = dict.directions.maps;
+  document.getElementById('photos-upload-btn').href = CONFIG.photosUploadURL;
 
   updateDateDisplays();
   renderSongs(lastSongs);
