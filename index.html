@@ -530,6 +530,13 @@
 
   .btn-cta:hover { background: var(--gold); color: var(--dark); }
 
+  .btn-cta.btn-cta-locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .btn-cta.btn-cta-locked:hover { background: transparent; color: var(--gold); }
+
   /* ── FOOTER ── */
   footer {
     border-top: 1px solid rgba(184,150,106,0.15);
@@ -720,7 +727,7 @@
       <p class="section-body" data-i18n="photos.p2">On our wedding day, we want to experience that magic through your eyes. We invite you to be true partners in our memories: capture the hug at the reception, the madness on the dance floor, and the joyful moments — yours and ours — together.</p>
       <p class="section-body" data-i18n="photos.p3">This gallery was created to gather all the love that will be in the air that night — we'd love for you to upload every bit of your footage from the evening here.</p>
       <p class="section-body" data-i18n="photos.closing">With love, gratitude, and already so excited to celebrate with you.</p>
-      <a class="btn-cta" id="photos-upload-btn" target="_blank" rel="noopener" data-i18n="photos.btn">Upload Photos &amp; Videos</a>
+      <a class="btn-cta" id="photos-upload-btn" target="_blank" rel="noopener" onclick="return handlePhotosClick(event)" data-i18n="photos.btn">Upload Photos &amp; Videos</a>
     </div>
   </section>
 
@@ -780,7 +787,8 @@ const I18N = {
       p2: 'On our wedding day, we want to experience that magic through your eyes. We invite you to be true partners in our memories: capture the hug at the reception, the madness on the dance floor, and the joyful moments — yours and ours — together.',
       p3: 'This gallery was created to gather all the love that will be in the air that night — we’d love for you to upload every bit of your footage from the evening here.',
       closing: 'With love, gratitude, and already so excited to celebrate with you.',
-      btn: 'Upload Photos &amp; Videos'
+      btn: 'Upload Photos &amp; Videos',
+      lockedAlert: 'This opens on the wedding day —'
     },
     footer: { names: 'Eliran &amp; Moral', status: 'See you on our big day' },
     langSwitchLabel: 'עברית',
@@ -810,11 +818,12 @@ const I18N = {
       label: 'תשלחו את הרגעים של הערב', title: 'שתפו <em>תמונות</em>',
       tagline: 'הסיפור שלנו לא שלם בלעדיכם',
       salutation: 'אהובים שלנו,',
-      p1: 'אנחנו מתכננים את היום הזה כבר חודשים, בוחרים כל פרט כדי שיהיה מושלם. אבל האמת היא, שמה שבאמת יהפוך את הערב הזה לקסם זה אתם. האנשים שמלווים אותנו, שאוהבים אותנו ושבאים לשמוח איתנו מהלב.',
-      p2: 'ביום החתונה, אנחנו רוצים לחוות את הקסם הזה דרך העיניים שלכם. אנחנו מזמינים אתכם להיות שותפים אמיתיים לזיכרונות שלנו: לצלם את החיבוק בקבלת פנים, את הטירוף ברחבה, ואת הרגעים השמחים שלכם ושלנו ביחד.',
-      p3: 'הגלריה הזו נוצרה כדי לאסוף את כל האהבה שתהיה באוויר, נשמח מאוד שתעלו לכאן כל תיעוד שלכם מהערב.',
+      p1: 'אנחנו מתכננים את היום הזה כבר חודשים ובוחרים כל פרט כדי שיהיה מושלם. אבל האמת היא שמה שבאמת יהפוך את הערב הזה לקסם זה אתם. האנשים שמלווים אותנו, שאוהבים אותנו ושבאים לשמוח איתנו מהלב.',
+      p2: 'ביום החתונה אנחנו רוצים לחוות את הקסם הזה דרך העיניים שלכם. אנחנו מזמינים אתכם להיות שותפים אמיתיים לזיכרונות שלנו: לצלם את החיבוק בקבלת פנים, את הטירוף ברחבה ואת הרגעים השמחים שלכם ושלנו ביחד.',
+      p3: 'הגלריה הזו נוצרה כדי לאסוף את כל האהבה שתהיה באוויר. נשמח מאוד שתעלו לכאן כל תיעוד שלכם מהערב.',
       closing: 'אוהבים, מעריכים ומחכים כבר להתרגש איתכם.',
-      btn: 'העלאת תמונות וסרטונים'
+      btn: 'העלאת תמונות וסרטונים',
+      lockedAlert: 'זה ייפתח ביום החתונה —'
     },
     footer: { names: 'אלירן ומורל', status: 'נתראה ביום הגדול שלנו' },
     langSwitchLabel: 'English',
@@ -857,7 +866,7 @@ function applyTranslations() {
 
   document.getElementById('waze-btn').title = dict.directions.waze;
   document.getElementById('maps-btn').title = dict.directions.maps;
-  document.getElementById('photos-upload-btn').href = CONFIG.photosUploadURL;
+  updatePhotosButtonState();
 
   updateDateDisplays();
   renderSongs(lastSongs);
@@ -886,6 +895,36 @@ function updateDateDisplays() {
   document.getElementById('detail-time-value').innerHTML =
     dict.day.detail.time.reception + ' · ' + CONFIG.receptionTime + '<br>' +
     dict.day.detail.time.chuppah + ' · ' + CONFIG.chuppahTime;
+}
+
+// ── PHOTO UPLOAD GATING ──
+// Soft, client-side-only gate: keeps the button inert until the wedding day
+// arrives, then leaves it open from then on. Anyone can bypass this by
+// changing their device clock, so it's just to discourage early use, not a
+// real access control.
+function isUploadUnlocked() {
+  return new Date() >= new Date(CONFIG.weddingDateISO);
+}
+
+function updatePhotosButtonState() {
+  const btn = document.getElementById('photos-upload-btn');
+  if (isUploadUnlocked()) {
+    btn.href = CONFIG.photosUploadURL;
+    btn.classList.remove('btn-cta-locked');
+    btn.removeAttribute('aria-disabled');
+  } else {
+    btn.removeAttribute('href');
+    btn.classList.add('btn-cta-locked');
+    btn.setAttribute('aria-disabled', 'true');
+  }
+}
+
+function handlePhotosClick(e) {
+  if (!isUploadUnlocked()) {
+    e.preventDefault();
+    alert(I18N[currentLang].photos.lockedAlert + ' ' + formatDate(CONFIG.weddingDateISO) + '!');
+    return false;
+  }
 }
 
 // ── BACKGROUND VIDEO ──
