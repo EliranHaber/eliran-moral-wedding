@@ -1048,6 +1048,8 @@ function saveLikedKeys() {
   } catch (e) { /* ignore (e.g. private browsing storage limits) */ }
 }
 
+let lastSongsJSON = null;
+
 async function fetchSongs() {
   if (!CONFIG.sheetsWebAppURL || CONFIG.sheetsWebAppURL.indexOf('PASTE_YOUR') !== -1) {
     lastSongs = [];
@@ -1057,7 +1059,14 @@ async function fetchSongs() {
   try {
     const res = await fetch(CONFIG.sheetsWebAppURL);
     const data = await res.json();
-    lastSongs = Array.isArray(data) ? data : [];
+    const newSongs = Array.isArray(data) ? data : [];
+    const newJSON = JSON.stringify(newSongs);
+    // Nothing actually changed since the last poll — skip the re-render so
+    // the list doesn't rebuild (and replay its entrance animation) every
+    // 20 seconds for no reason.
+    if (newJSON === lastSongsJSON) return;
+    lastSongsJSON = newJSON;
+    lastSongs = newSongs;
   } catch (err) {
     console.error('Failed to load song suggestions', err);
     lastSongs = [];
