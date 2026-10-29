@@ -434,6 +434,24 @@
 
   .music-list { display: flex; flex-direction: column; gap: 0; }
 
+  .music-view-all-btn {
+    display: block;
+    margin: 1.5rem auto 0;
+    background: none;
+    border: none;
+    color: var(--gold);
+    font-family: var(--sans);
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    padding: 0.5rem;
+  }
+
+  .music-view-all-btn:hover { color: var(--gold-light); }
+
   .music-item {
     display: flex;
     align-items: center;
@@ -714,6 +732,7 @@
     </div>
 
     <div class="music-list reveal" style="transition-delay:0.2s" id="music-list"></div>
+    <button id="music-view-all" class="music-view-all-btn" onclick="toggleShowAllSongs()" style="display:none"></button>
   </section>
 
   <!-- PHOTO & VIDEO SHARING -->
@@ -776,7 +795,7 @@ const I18N = {
       label: 'Help us set the mood', title: 'Suggest a <em>Song</em>',
       body: 'Tell us what must play that night. Every suggestion goes straight to our DJ — don’t hold back.',
       link_ph: 'Paste a Spotify/YouTube link',
-      btn: { add: 'Add Song' }, by_guest: 'Suggested by a guest', linkFallback: 'Shared a track',
+      btn: { add: 'Add Song', viewAll: 'View Full List', viewLess: 'Show Top 5' }, by_guest: 'Suggested by a guest', linkFallback: 'Shared a track',
       alert: { badLink: 'Please paste a valid YouTube or Spotify link.', empty: 'Please paste a link.' }
     },
     photos: {
@@ -788,7 +807,7 @@ const I18N = {
       p3: 'This gallery was created to gather all the love that will be in the air that night — we’d love for you to upload every bit of your footage from the evening here.',
       closing: 'With love, gratitude, and already so excited to celebrate with you.',
       btn: 'Upload Photos &amp; Videos',
-      lockedAlert: 'This opens on the wedding day —'
+      lockedAlert: 'Patience, love is coming! This opens on our wedding day,'
     },
     footer: { names: 'Eliran &amp; Moral', status: 'See you on our big day' },
     langSwitchLabel: 'עברית',
@@ -811,7 +830,7 @@ const I18N = {
       label: 'עזרו לנו לקבוע את האווירה', title: 'תציעו <em>שיר</em>',
       body: 'ספרו לנו מה חייב להתנגן בערב הזה.',
       link_ph: 'הדביקו קישור מספוטיפיי/יוטיוב',
-      btn: { add: 'הוסיפו שיר' }, by_guest: 'הוצע על ידי אורח', linkFallback: 'שותף קישור לשיר',
+      btn: { add: 'הוסיפו שיר', viewAll: 'לרשימה המלאה', viewLess: 'הצג רק את הטופ 5' }, by_guest: 'הוצע על ידי אורח', linkFallback: 'שותף קישור לשיר',
       alert: { badLink: 'נא להדביק קישור תקין מיוטיוב או ספוטיפיי.', empty: 'נא להדביק קישור.' }
     },
     photos: {
@@ -823,7 +842,7 @@ const I18N = {
       p3: 'הגלריה הזו נוצרה כדי לאסוף את כל האהבה שתהיה באוויר. נשמח מאוד שתעלו לכאן כל תיעוד שלכם מהערב.',
       closing: 'אוהבים, מעריכים ומחכים כבר להתרגש איתכם.',
       btn: 'העלאת תמונות וסרטונים',
-      lockedAlert: 'זה ייפתח ביום החתונה —'
+      lockedAlert: 'עוד רגע סבלנות, האהבה בדרך! זה ייפתח ביום החתונה שלנו,'
     },
     footer: { names: 'אלירן ומורל', status: 'נתראה ביום הגדול שלנו' },
     langSwitchLabel: 'English',
@@ -922,7 +941,7 @@ function updatePhotosButtonState() {
 function handlePhotosClick(e) {
   if (!isUploadUnlocked()) {
     e.preventDefault();
-    alert(I18N[currentLang].photos.lockedAlert + ' ' + formatDate(CONFIG.weddingDateISO) + '!');
+    alert(I18N[currentLang].photos.lockedAlert + ' ' + formatDate(CONFIG.weddingDateISO) + ' 💍');
     return false;
   }
 }
@@ -1046,11 +1065,23 @@ async function fetchSongs() {
   renderSongs(lastSongs);
 }
 
+const SONGS_PREVIEW_COUNT = 5;
+let showAllSongs = false;
+
 function renderSongs(songs) {
   const list = document.getElementById('music-list');
   const dict = I18N[currentLang];
   list.innerHTML = '';
-  songs.forEach((s, i) => {
+
+  // Rank by likes, but keep each song's real index into `songs` (not its
+  // rank position) so likeSong() keeps using a safe numeric index rather
+  // than ever having to embed guest-submitted text inside an onclick attr.
+  const ranked = songs
+    .map((s, originalIndex) => ({ s, originalIndex }))
+    .sort((a, b) => (b.s.count || 1) - (a.s.count || 1));
+  const visible = showAllSongs ? ranked : ranked.slice(0, SONGS_PREVIEW_COUNT);
+
+  visible.forEach(({ s, originalIndex }, rank) => {
     const item = document.createElement('div');
     item.className = 'music-item';
     const by = s.name ? escapeHtml(s.name) : dict.music.by_guest;
@@ -1061,14 +1092,27 @@ function renderSongs(songs) {
     const key = (s.song || s.link || '').toLowerCase();
     const liked = likedKeys.has(key);
     item.innerHTML = `
-      <span class="music-num">${i + 1}</span>
+      <span class="music-num">${rank + 1}</span>
       <div class="music-song">${titleHtml}<br><span class="music-by">${artistHtml}${by}</span></div>
-      <button class="music-heart${liked ? ' liked' : ''}" onclick="likeSong(${i})" title="Love this song">
+      <button class="music-heart${liked ? ' liked' : ''}" onclick="likeSong(${originalIndex})" title="Love this song">
         ${liked ? '♥' : '♡'} ${s.count || 1}
       </button>
     `;
     list.appendChild(item);
   });
+
+  const viewAllBtn = document.getElementById('music-view-all');
+  if (songs.length > SONGS_PREVIEW_COUNT) {
+    viewAllBtn.style.display = 'block';
+    viewAllBtn.textContent = showAllSongs ? dict.music.btn.viewLess : dict.music.btn.viewAll;
+  } else {
+    viewAllBtn.style.display = 'none';
+  }
+}
+
+function toggleShowAllSongs() {
+  showAllSongs = !showAllSongs;
+  renderSongs(lastSongs);
 }
 
 // Toggle a like: clicking an unliked heart increments its shared count,
