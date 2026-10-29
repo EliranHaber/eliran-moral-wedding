@@ -485,18 +485,18 @@
 
   .music-heart:hover, .music-heart.liked { color: #c97070; transform: scale(1.2); }
 
-  /* ── TO OUR GUESTS ── */
+  /* ── TO OUR GUESTS / PHOTO SHARING (letter-style sections) ── */
   #guests { text-align: center; }
 
-  #guests .section-label { justify-content: center; }
-  #guests .section-label::after { display: none; }
+  #guests .section-label, #photos .section-label { justify-content: center; }
+  #guests .section-label::after, #photos .section-label::after { display: none; }
 
-  #guests .section-body {
+  #guests .section-body, #photos .section-body {
     margin: 0 auto 1.1rem;
     text-align: center;
   }
 
-  .guests-tagline {
+  .letter-tagline {
     font-family: var(--serif);
     font-size: 1.35rem;
     font-style: italic;
@@ -506,7 +506,7 @@
     margin: 0 auto 2rem;
   }
 
-  html[dir="rtl"] .guests-tagline { font-style: normal; }
+  html[dir="rtl"] .letter-tagline { font-style: normal; }
 
   /* ── PHOTO & VIDEO SHARING ── */
   #photos { text-align: center; }
@@ -714,7 +714,7 @@
     <div class="reveal">
       <p class="section-label" data-i18n="guests.label">A note from us</p>
       <h2 class="section-title" data-i18n="guests.title">To Our <em>Guests</em></h2>
-      <p class="guests-tagline" data-i18n="guests.tagline">Our story isn't complete without you.</p>
+      <p class="letter-tagline" data-i18n="guests.tagline">Our story isn't complete without you.</p>
       <p class="section-body" data-i18n="guests.salutation">Our beloved ones,</p>
       <p class="section-body" data-i18n="guests.p1">We've been planning this day for months now, choosing every little detail so it would be perfect. But the truth is, what will really turn this evening into something magical is you — the people who stand beside us, who love us, and who come to celebrate with us from the heart.</p>
       <p class="section-body" data-i18n="guests.p2">On our wedding day, we want to experience that magic through your eyes. We invite you to be true partners in our memories: capture the hug at the reception, the madness on the dance floor, and the joyful moments — yours and ours — together.</p>
@@ -727,7 +727,12 @@
     <div class="reveal">
       <p class="section-label" data-i18n="photos.label">Capture the night</p>
       <h2 class="section-title" data-i18n="photos.title">Share Your <em>Photos</em></h2>
-      <p class="section-body" style="margin: 0 auto; text-align:center" data-i18n="photos.body">Snapped something beautiful? Add your photos and videos from the night to our shared album — we'd love to see the day through your eyes.</p>
+      <p class="letter-tagline" data-i18n="photos.tagline">Our story isn't complete without you.</p>
+      <p class="section-body" data-i18n="photos.salutation">Our beloved ones,</p>
+      <p class="section-body" data-i18n="photos.p1">We've been planning this day for months now, choosing every little detail so it would be perfect. But the truth is, what will really turn this evening into something magical is you — the people who stand beside us, who love us, and who come to celebrate with us from the heart.</p>
+      <p class="section-body" data-i18n="photos.p2">On our wedding day, we want to experience that magic through your eyes. We invite you to be true partners in our memories: capture the hug at the reception, the madness on the dance floor, and the joyful moments — yours and ours — together.</p>
+      <p class="section-body" data-i18n="photos.p3">This gallery was created to gather all the love that will be in the air that night — we'd love for you to upload every bit of your footage from the evening here.</p>
+      <p class="section-body" data-i18n="photos.closing">With love, gratitude, and already so excited to celebrate with you.</p>
       <a class="btn-cta" id="photos-upload-btn" target="_blank" rel="noopener" data-i18n="photos.btn">Upload Photos &amp; Videos</a>
     </div>
   </section>
@@ -789,8 +794,13 @@ const I18N = {
       closing: 'With love, gratitude, and already so excited to celebrate with you,'
     },
     photos: {
-      label: 'Capture the night', title: 'Share Your <em>Photos</em>',
-      body: 'Snapped something beautiful? Add your photos and videos from the night to our shared album — we’d love to see the day through your eyes.',
+      label: 'Send us the moments', title: 'Share Your <em>Photos</em>',
+      tagline: 'Our story isn’t complete without you.',
+      salutation: 'Our beloved ones,',
+      p1: 'We’ve been planning this day for months now, choosing every little detail so it would be perfect. But the truth is, what will really turn this evening into something magical is you — the people who stand beside us, who love us, and who come to celebrate with us from the heart.',
+      p2: 'On our wedding day, we want to experience that magic through your eyes. We invite you to be true partners in our memories: capture the hug at the reception, the madness on the dance floor, and the joyful moments — yours and ours — together.',
+      p3: 'This gallery was created to gather all the love that will be in the air that night — we’d love for you to upload every bit of your footage from the evening here.',
+      closing: 'With love, gratitude, and already so excited to celebrate with you.',
       btn: 'Upload Photos &amp; Videos'
     },
     footer: { names: 'Eliran &amp; Moral', status: 'See you on our big day' },
@@ -826,8 +836,13 @@ const I18N = {
       closing: 'אוהבים, מעריכים ומחכים כבר להתרגש איתכם,'
     },
     photos: {
-      label: 'תפסו את הערב', title: 'שתפו <em>תמונות</em>',
-      body: 'צילמתם רגע יפה? שתפו אותנו בתמונות ובסרטונים מהערב באלבום המשותף שלנו — נשמח לראות את היום דרך העיניים שלכם.',
+      label: 'תשלחו את הרגעים של הערב', title: 'שתפו <em>תמונות</em>',
+      tagline: 'הסיפור שלנו לא שלם בלעדיכם',
+      salutation: 'אהובים שלנו,',
+      p1: 'אנחנו מתכננים את היום הזה כבר חודשים, בוחרים כל פרט כדי שיהיה מושלם. אבל האמת היא, שמה שבאמת יהפוך את הערב הזה לקסם זה אתם. האנשים שמלווים אותנו, שאוהבים אותנו ושבאים לשמוח איתנו מהלב.',
+      p2: 'ביום החתונה, אנחנו רוצים לחוות את הקסם הזה דרך העיניים שלכם. אנחנו מזמינים אתכם להיות שותפים אמיתיים לזיכרונות שלנו: לצלם את החיבוק בקבלת פנים, את הטירוף ברחבה, ואת הרגעים השמחים שלכם ושלנו ביחד.',
+      p3: 'הגלריה הזו נוצרה כדי לאסוף את כל האהבה שתהיה באוויר, נשמח מאוד שתעלו לכאן כל תיעוד שלכם מהערב.',
+      closing: 'אוהבים, מעריכים ומחכים כבר להתרגש איתכם.',
       btn: 'העלאת תמונות וסרטונים'
     },
     footer: { names: 'אלירן ומורל', status: 'נתראה ביום הגדול שלנו' },
