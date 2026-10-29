@@ -485,13 +485,11 @@
 
   .music-heart:hover, .music-heart.liked { color: #c97070; transform: scale(1.2); }
 
-  /* ── TO OUR GUESTS / PHOTO SHARING (letter-style sections) ── */
-  #guests { text-align: center; }
+  /* ── LETTER-STYLE SECTIONS ── */
+  #photos .section-label { justify-content: center; }
+  #photos .section-label::after { display: none; }
 
-  #guests .section-label, #photos .section-label { justify-content: center; }
-  #guests .section-label::after, #photos .section-label::after { display: none; }
-
-  #guests .section-body, #photos .section-body {
+  #photos .section-body {
     margin: 0 auto 1.1rem;
     text-align: center;
   }
@@ -709,19 +707,6 @@
     <div class="music-list reveal" style="transition-delay:0.2s" id="music-list"></div>
   </section>
 
-  <!-- TO OUR GUESTS -->
-  <section id="guests">
-    <div class="reveal">
-      <p class="section-label" data-i18n="guests.label">A note from us</p>
-      <h2 class="section-title" data-i18n="guests.title">To Our <em>Guests</em></h2>
-      <p class="letter-tagline" data-i18n="guests.tagline">Our story isn't complete without you.</p>
-      <p class="section-body" data-i18n="guests.salutation">Our beloved ones,</p>
-      <p class="section-body" data-i18n="guests.p1">We've been planning this day for months now, choosing every little detail so it would be perfect. But the truth is, what will really turn this evening into something magical is you — the people who stand beside us, who love us, and who come to celebrate with us from the heart.</p>
-      <p class="section-body" data-i18n="guests.p2">On our wedding day, we want to experience that magic through your eyes. We invite you to be true partners in our memories: capture the hug at the reception, the madness on the dance floor, and the joyful moments — yours and ours — together.</p>
-      <p class="section-body" data-i18n="guests.closing">With love, gratitude, and already so excited to celebrate with you,</p>
-    </div>
-  </section>
-
   <!-- PHOTO & VIDEO SHARING -->
   <section id="photos">
     <div class="reveal">
@@ -785,14 +770,6 @@ const I18N = {
       btn: { add: 'Add Song' }, by_guest: 'Suggested by a guest', linkFallback: 'Shared a track',
       alert: { badLink: 'Please paste a valid YouTube or Spotify link.', empty: 'Please paste a link.' }
     },
-    guests: {
-      label: 'A note from us', title: 'To Our <em>Guests</em>',
-      tagline: 'Our story isn’t complete without you.',
-      salutation: 'Our beloved ones,',
-      p1: 'We’ve been planning this day for months now, choosing every little detail so it would be perfect. But the truth is, what will really turn this evening into something magical is you — the people who stand beside us, who love us, and who come to celebrate with us from the heart.',
-      p2: 'On our wedding day, we want to experience that magic through your eyes. We invite you to be true partners in our memories: capture the hug at the reception, the madness on the dance floor, and the joyful moments — yours and ours — together.',
-      closing: 'With love, gratitude, and already so excited to celebrate with you,'
-    },
     photos: {
       label: 'Send us the moments', title: 'Share Your <em>Photos</em>',
       tagline: 'Our story isn’t complete without you.',
@@ -826,14 +803,6 @@ const I18N = {
       link_ph: 'הדביקו קישור מספוטיפיי/יוטיוב',
       btn: { add: 'הוסיפו שיר' }, by_guest: 'הוצע על ידי אורח', linkFallback: 'שותף קישור לשיר',
       alert: { badLink: 'נא להדביק קישור תקין מיוטיוב או ספוטיפיי.', empty: 'נא להדביק קישור.' }
-    },
-    guests: {
-      label: 'מילה מאיתנו', title: 'לאורחים והמוזמנים <em>שלנו</em>',
-      tagline: 'הסיפור שלנו לא שלם בלעדיכם.',
-      salutation: 'אהובים שלנו,',
-      p1: 'אנחנו מתכננים את היום הזה כבר חודשים, בוחרים כל פרט כדי שיהיה מושלם. אבל האמת היא, שמה שבאמת יהפוך את הערב הזה לקסם זה אתם. האנשים שמלווים אותנו, שאוהבים אותנו ושבאים לשמוח איתנו מהלב.',
-      p2: 'ביום החתונה, אנחנו רוצים לחוות את הקסם הזה דרך העיניים שלכם. אנחנו מזמינים אתכם להיות שותפים אמיתיים לזיכרונות שלנו: לצלם את החיבוק בקבלת פנים, את הטירוף ברחבה, ואת הרגעים השמחים שלכם ושלנו ביחד.',
-      closing: 'אוהבים, מעריכים ומחכים כבר להתרגש איתכם,'
     },
     photos: {
       label: 'תשלחו את הרגעים של הערב', title: 'שתפו <em>תמונות</em>',
