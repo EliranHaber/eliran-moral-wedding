@@ -15,7 +15,7 @@
   :root {
     --cream: #f7f3ee;
     --warm-white: #faf8f5;
-    --dark: #272019;
+    --dark: #332b22;
     --mid: #6b6560;
     --light: #c8bfb3;
     --gold: #b8966a;
@@ -276,6 +276,7 @@
     line-height: 1.2;
     color: var(--cream);
     margin-bottom: 1.2rem;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.4);
   }
 
   .section-title em { font-style: italic; color: var(--gold-light); }
@@ -1033,10 +1034,19 @@ async function sendToSheet(data) {
 // just bumps its heart count server-side rather than adding a duplicate row.
 let lastSongs = [];
 
-// The identity of a song suggestion: its name if known, otherwise its link.
-// Used for likes, dedupe, and duplicate-submission checks alike.
+// The identity of a song suggestion: song + artist combined, but order-
+// independent (sorted), so a title parsed as "song: X, artist: Y" matches
+// one parsed as "song: Y, artist: X" for the same track — this happened in
+// practice when two links' titles were formatted inconsistently. Falls back
+// to the link when neither name was detected. Used for likes, dedupe, and
+// duplicate-submission checks alike.
 function songKey(s) {
-  return (s.song || s.link || '').toLowerCase();
+  const parts = [s.song, s.artist]
+    .map(v => (v || '').trim().toLowerCase())
+    .filter(Boolean)
+    .sort();
+  if (parts.length) return parts.join('|');
+  return (s.link || '').toLowerCase();
 }
 
 // Persisted in localStorage so a refresh can't be used to re-like (and re-count) the same song
@@ -1232,7 +1242,7 @@ async function addSong() {
   const song = info ? info.song : '';
   const artist = info ? info.artist : '';
 
-  const newKey = songKey({ song, link });
+  const newKey = songKey({ song, artist, link });
   if (lastSongs.some(s => songKey(s) === newKey)) {
     btn.disabled = false;
     alert(dict.music.alert.duplicate);

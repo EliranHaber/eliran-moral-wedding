@@ -5,13 +5,27 @@
  *
  * Sheet columns (tab "Songs"): Timestamp | Song | Artist | Link | Suggested By | Count
  *
- * Suggesting a song that's already on the sheet (matched by song name, or by
- * link when no song name is given) bumps its Count instead of adding a
+ * Suggesting a song that's already on the sheet (matched by song+artist, or
+ * by link when neither name is known) bumps its Count instead of adding a
  * duplicate row — that Count is the heart number guests see on the site.
  * A like click resubmits the same way with unlike=false; clicking again to
  * undo a like sends unlike=true, which decrements Count instead (floored
  * at 1, since a row only exists because someone suggested it at least once).
+ *
+ * The song+artist match is order-independent (both names sorted before
+ * joining) because two links for the same track can get their title parsed
+ * inconsistently - one as "song: X, artist: Y", another as "song: Y, artist:
+ * X" - and those must still be recognized as the same song.
  */
+
+function rowKeyOf(song, artist, link) {
+  var parts = [song, artist]
+    .map(function (v) { return (v || '').toString().trim().toLowerCase(); })
+    .filter(function (v) { return v; })
+    .sort();
+  if (parts.length) return parts.join('|');
+  return (link || '').toString().trim().toLowerCase();
+}
 
 function doPost(e) {
   var params = e.parameter;
@@ -28,12 +42,12 @@ function doPost(e) {
     var link = (params.link || '').trim();
     var name = (params.name || '').trim();
     var isUnlike = params.unlike === 'true';
-    var key = (song || link).toLowerCase();
+    var key = rowKeyOf(song, artist, link);
 
     var data = sheet.getDataRange().getValues();
     var matchedRow = -1;
     for (var i = 1; i < data.length; i++) {
-      var rowKey = ((data[i][1] || data[i][3] || '') + '').trim().toLowerCase();
+      var rowKey = rowKeyOf(data[i][1], data[i][2], data[i][3]);
       if (key && rowKey === key) {
         matchedRow = i + 1; // 1-indexed sheet row
         break;
