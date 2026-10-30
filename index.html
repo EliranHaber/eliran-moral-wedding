@@ -15,7 +15,7 @@
   :root {
     --cream: #f7f3ee;
     --warm-white: #faf8f5;
-    --dark: #1a1714;
+    --dark: #272019;
     --mid: #6b6560;
     --light: #c8bfb3;
     --gold: #b8966a;
@@ -796,7 +796,7 @@ const I18N = {
       body: 'Tell us what must play that night. Every suggestion goes straight to our DJ — don’t hold back.',
       link_ph: 'Paste a Spotify/YouTube link',
       btn: { add: 'Add Song', viewAll: 'View Full List', viewLess: 'Show Top 5' }, by_guest: 'Suggested by a guest', linkFallback: 'Shared a track',
-      alert: { badLink: 'Please paste a valid YouTube or Spotify link.', empty: 'Please paste a link.' }
+      alert: { badLink: 'Please paste a valid YouTube or Spotify link.', empty: 'Please paste a link.', duplicate: 'Song already requested!' }
     },
     photos: {
       label: 'Send us the moments', title: 'Share Your <em>Photos</em>',
@@ -831,7 +831,7 @@ const I18N = {
       body: 'ספרו לנו מה חייב להתנגן בערב הזה.',
       link_ph: 'הדביקו קישור מספוטיפיי/יוטיוב',
       btn: { add: 'הוסיפו שיר', viewAll: 'לרשימה המלאה', viewLess: 'הצג רק את הטופ 5' }, by_guest: 'הוצע על ידי אורח', linkFallback: 'שותף קישור לשיר',
-      alert: { badLink: 'נא להדביק קישור תקין מיוטיוב או ספוטיפיי.', empty: 'נא להדביק קישור.' }
+      alert: { badLink: 'נא להדביק קישור תקין מיוטיוב או ספוטיפיי.', empty: 'נא להדביק קישור.', duplicate: 'השיר כבר הוצע!' }
     },
     photos: {
       label: 'תשלחו את הרגעים של הערב', title: 'שתפו <em>תמונות</em>',
@@ -1033,6 +1033,12 @@ async function sendToSheet(data) {
 // just bumps its heart count server-side rather than adding a duplicate row.
 let lastSongs = [];
 
+// The identity of a song suggestion: its name if known, otherwise its link.
+// Used for likes, dedupe, and duplicate-submission checks alike.
+function songKey(s) {
+  return (s.song || s.link || '').toLowerCase();
+}
+
 // Persisted in localStorage so a refresh can't be used to re-like (and re-count) the same song
 function loadLikedKeys() {
   try {
@@ -1098,7 +1104,7 @@ function renderSongs(songs) {
     const safeLink = s.link ? sanitizeUrl(s.link) : null;
     const titleHtml = safeLink ? `<a href="${safeLink}" target="_blank" rel="noopener">${titleText}</a>` : titleText;
     const artistHtml = s.artist ? escapeHtml(s.artist) + ' · ' : '';
-    const key = (s.song || s.link || '').toLowerCase();
+    const key = songKey(s);
     const liked = likedKeys.has(key);
     item.innerHTML = `
       <span class="music-num">${rank + 1}</span>
@@ -1129,7 +1135,7 @@ function toggleShowAllSongs() {
 async function likeSong(i) {
   const s = lastSongs[i];
   if (!s) return;
-  const key = (s.song || s.link || '').toLowerCase();
+  const key = songKey(s);
   if (!key) return;
   const alreadyLiked = likedKeys.has(key);
 
@@ -1225,6 +1231,13 @@ async function addSong() {
   const info = await detectSongInfo(link);
   const song = info ? info.song : '';
   const artist = info ? info.artist : '';
+
+  const newKey = songKey({ song, link });
+  if (lastSongs.some(s => songKey(s) === newKey)) {
+    btn.disabled = false;
+    alert(dict.music.alert.duplicate);
+    return;
+  }
 
   await sendToSheet({ type: 'song', song, artist, link, name: '' });
   btn.disabled = false;
