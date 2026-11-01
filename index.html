@@ -1066,6 +1066,32 @@ function saveLikedKeys() {
 
 let lastSongsJSON = null;
 
+// Belt-and-suspenders against the sheet ever holding two rows for the same
+// song (pre-existing duplicates from before a dedupe fix shipped, or a rare
+// race where two guests submit at nearly the same instant) — merge by
+// songKey on every fetch so the list guests see never shows a duplicate,
+// regardless of what's actually sitting in the sheet. Counts are summed.
+function mergeDuplicateSongs(songs) {
+  const merged = [];
+  const indexByKey = new Map();
+  for (const s of songs) {
+    const key = songKey(s);
+    const existingIndex = key ? indexByKey.get(key) : undefined;
+    if (existingIndex === undefined) {
+      if (key) indexByKey.set(key, merged.length);
+      merged.push({ ...s });
+    } else {
+      const existing = merged[existingIndex];
+      existing.count = (existing.count || 1) + (s.count || 1);
+      if (!existing.song && s.song) existing.song = s.song;
+      if (!existing.artist && s.artist) existing.artist = s.artist;
+      if (!existing.name && s.name) existing.name = s.name;
+      if (!existing.link && s.link) existing.link = s.link;
+    }
+  }
+  return merged;
+}
+
 async function fetchSongs() {
   if (!CONFIG.sheetsWebAppURL || CONFIG.sheetsWebAppURL.indexOf('PASTE_YOUR') !== -1) {
     lastSongs = [];
@@ -1075,7 +1101,7 @@ async function fetchSongs() {
   try {
     const res = await fetch(CONFIG.sheetsWebAppURL);
     const data = await res.json();
-    const newSongs = Array.isArray(data) ? data : [];
+    const newSongs = mergeDuplicateSongs(Array.isArray(data) ? data : []);
     const newJSON = JSON.stringify(newSongs);
     // Nothing actually changed since the last poll — skip the re-render so
     // the list doesn't rebuild (and replay its entrance animation) every

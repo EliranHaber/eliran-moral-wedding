@@ -32,36 +32,46 @@ function doPost(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 
   if (params.type === 'song') {
-    var sheet = ss.getSheetByName('Songs') || ss.insertSheet('Songs');
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(['Timestamp', 'Song', 'Artist', 'Link', 'Suggested By', 'Count']);
-    }
-
-    var song = (params.song || '').trim();
-    var artist = (params.artist || '').trim();
-    var link = (params.link || '').trim();
-    var name = (params.name || '').trim();
-    var isUnlike = params.unlike === 'true';
-    var key = rowKeyOf(song, artist, link);
-
-    var data = sheet.getDataRange().getValues();
-    var matchedRow = -1;
-    for (var i = 1; i < data.length; i++) {
-      var rowKey = rowKeyOf(data[i][1], data[i][2], data[i][3]);
-      if (key && rowKey === key) {
-        matchedRow = i + 1; // 1-indexed sheet row
-        break;
+    // Apps Script doesn't serialize requests on its own — without this lock,
+    // two guests submitting (or liking) at nearly the same instant can both
+    // read the sheet, both conclude "no match yet", and both append a
+    // duplicate row. The lock makes the read-then-write atomic.
+    var lock = LockService.getScriptLock();
+    lock.waitLock(10000);
+    try {
+      var sheet = ss.getSheetByName('Songs') || ss.insertSheet('Songs');
+      if (sheet.getLastRow() === 0) {
+        sheet.appendRow(['Timestamp', 'Song', 'Artist', 'Link', 'Suggested By', 'Count']);
       }
-    }
 
-    if (matchedRow > -1) {
-      var currentCount = sheet.getRange(matchedRow, 6).getValue() || 1;
-      var newCount = isUnlike ? Math.max(1, currentCount - 1) : currentCount + 1;
-      sheet.getRange(matchedRow, 6).setValue(newCount);
-    } else if (!isUnlike) {
-      sheet.appendRow([new Date(), song, artist, link, name, 1]);
+      var song = (params.song || '').trim();
+      var artist = (params.artist || '').trim();
+      var link = (params.link || '').trim();
+      var name = (params.name || '').trim();
+      var isUnlike = params.unlike === 'true';
+      var key = rowKeyOf(song, artist, link);
+
+      var data = sheet.getDataRange().getValues();
+      var matchedRow = -1;
+      for (var i = 1; i < data.length; i++) {
+        var rowKey = rowKeyOf(data[i][1], data[i][2], data[i][3]);
+        if (key && rowKey === key) {
+          matchedRow = i + 1; // 1-indexed sheet row
+          break;
+        }
+      }
+
+      if (matchedRow > -1) {
+        var currentCount = sheet.getRange(matchedRow, 6).getValue() || 1;
+        var newCount = isUnlike ? Math.max(1, currentCount - 1) : currentCount + 1;
+        sheet.getRange(matchedRow, 6).setValue(newCount);
+      } else if (!isUnlike) {
+        sheet.appendRow([new Date(), song, artist, link, name, 1]);
+      }
+      // An unlike with no matching row is a no-op — nothing to undo.
+    } finally {
+      lock.releaseLock();
     }
-    // An unlike with no matching row is a no-op — nothing to undo.
   }
 
   return ContentService
